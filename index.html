@@ -1,0 +1,45 @@
+Configure your local development environment to serve your application
+Replace my-site with a machine-friendly (no spaces or special punctuation) name for your new application and run the following command (assumes DDEV):
+
+mkdir my-site
+cd my-site
+ddev config --docroot web --project-name my-site --project-type drupal10 --create-docroot
+This will create a new DDEV project configured to host a Drupal application. DDEV will store the generated configuration in a new .ddev subdirectory.
+
+Next, start the DDEV container
+
+ddev start
+You now have a web server and database server configured and running. Configuring DDEV first allows us to run Composer from within DDEV instead of installing it locally.
+
+Create a new Drupal application
+Next, use Composer to install Drupal, which enables you to install and update dependencies (modules, themes, profiles, libraries, etc.) also with Composer. It is best practice to ensure that your entire Drupal application is managed with Composer in order to facilitate manageable upgrades.
+
+Now create a new Drupal application with Composer. Note: ddev composer create will unpack and download the files into the current folder, unlike composer create-project which downloads Drupal into a separate folder.
+
+ddev composer create drupal/recommended-project
+Next install the latest version of Drush, a command-line utility for Drupal.
+
+ddev composer require drush/drush
+It is possible to install Drupal with Composer without using the DDEV environment, but not recommended, since PHP versions in DDEV and your local environment may differ.
+
+composer create-project drupal/recommended-project
+You now have a web server and database server configured and running.
+
+Install Drupal
+Next, you must install Drupal using Drush, which populates your Drupal application’s new database.
+
+Using DDEV and Drush, execute the command below. Replace my-password with the password that you would like to use for the admin (user 1) account.
+
+ddev drush site:install --account-name=admin --account-pass=my-password
+Drupal is now installed.
+
+Log In
+Finally, launch your new Drupal site and log in.
+
+ddev launch
+You can also generate a one-time login link.
+
+ddev drush user:login
+If necessary, execute ddev describe to view the URL of your site. Copy and paste that URL into your web browser to visit it.
+
+Log in to the site using the --account-name and --account-pass you specified in the previous section (the section called “Install Drupal”).
