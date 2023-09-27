@@ -1,45 +1,91 @@
-Configure your local development environment to serve your application
-Replace my-site with a machine-friendly (no spaces or special punctuation) name for your new application and run the following command (assumes DDEV):
+Step 2 — Deploying a New Drupal 9 Site Using DDEV
+With DDEV running, you will now use it to create a Drupal-specific filesystem, install Drupal 9, and then initiate a standard website project.
 
-mkdir my-site
-cd my-site
-ddev config --docroot web --project-name my-site --project-type drupal10 --create-docroot
-This will create a new DDEV project configured to host a Drupal application. DDEV will store the generated configuration in a new .ddev subdirectory.
+First, you will create a project root directory and then move inside it. You will run all remaining commands from this location. This tutorial will use d9test, but you are free to name your directory something else. Note, however, that DDEV doesn’t handle hyphenated names well. It is considered a best practice to avoid directory names like my-project or drupal-site-1.
 
-Next, start the DDEV container
+Create your project root directory and navigate inside:
+
+mkdir d9test
+cd d9test
+DDEV excels at creating directory trees that match specific CMS platforms. Use the ddev config command to create a directory structure specific to Drupal 9:
+
+ddev config --project-type=drupal9 --docroot=web --create-docroot
+You will see an output like this:
+
+Output
+Creating a new ddev project config in the current directory (/Users/sammy/d9test)
+Once completed, your configuration will be written to /Users/sammy/d9test/.ddev/config.yaml
+
+Created docroot at /Users/sammy/d9test/web
+You have specified a project type of drupal9 but no project of that type is found in /Users/sammy/d9test/web
+Ensuring write permissions for d9new
+No settings.php file exists, creating one
+Existing settings.php file includes settings.ddev.php
+Configuration complete. You may now run 'ddev start'.
+Because you passed --project-type=drupal9 to your ddev config command, DDEV created several subdirectories and files that represent the default organization for a Drupal website. Your project directory tree will now look like this:
+
+A Drupal 9 directory tree
+.
+├── .ddev
+│   ├── .gitignore
+│   ├── config.yaml
+│   ├── db-build
+│   │   └── Dockerfile.example
+│   └── web-build
+│       └── Dockerfile.example
+└── web
+    └── sites
+        └── default
+            ├── .gitignore
+            ├── settings.ddev.php
+            └── settings.php
+
+6 directories, 7 files
+.ddev/ will be the main folder for the ddev configuration. web/ will be the docroot for your new project; it will contain several specific settings. files. You now have the initial scaffolding for your new Drupal project.
+
+Your next step is to initialize your platform, which will build the necessary containers and networking configurations. DDEV binds to ports 80 and 443, so if you are running a web server like Apache on your machine, or anything else that uses those ports, stop those services before continuing.
+
+Use the ddev start command to initialize your platform:
 
 ddev start
-You now have a web server and database server configured and running. Configuring DDEV first allows us to run Composer from within DDEV instead of installing it locally.
+This will build all the Docker-based containers for your project, which include a web container, a database container, and phpmyadmin. When the initialization completes you will see an output like this (your port number might differ):
 
-Create a new Drupal application
-Next, use Composer to install Drupal, which enables you to install and update dependencies (modules, themes, profiles, libraries, etc.) also with Composer. It is best practice to ensure that your entire Drupal application is managed with Composer in order to facilitate manageable upgrades.
+...
+[secondary_label Output]
+Successfully started d9test
+Project can be reached at http://d9test.ddev.site http://127.0.0.1:32773
+Note: Remember that DDEV is starting Docker containers behind the scenes here. If you want to view those containers or verify that they are running, you can always use the docker ps command:
 
-Now create a new Drupal application with Composer. Note: ddev composer create will unpack and download the files into the current folder, unlike composer create-project which downloads Drupal into a separate folder.
+docker ps
+Alongside any other containers that you are currently running, you will find four new containers, each running a different image: php-myadmin, ddev-webserver, ddev-router, and ddev-dbserver-mariadb.
 
-ddev composer create drupal/recommended-project
-Next install the latest version of Drush, a command-line utility for Drupal.
+ddev start has successfully built your containers and given you an output with two URLs. While this output says that your project “can be reached at http://d9test.ddev.site and http://127.0.0.1:32773,” visiting these URLs right now will throw an error. Starting with Drupal 8, the Drupal core and the contrib modules function like dependencies. Therefore, you’ll first need to finish installing Drupal using Composer, the package manager for PHP projects, before anything loads in your web browser.
 
-ddev composer require drush/drush
-It is possible to install Drupal with Composer without using the DDEV environment, but not recommended, since PHP versions in DDEV and your local environment may differ.
+One of the most useful and elegant features of DDEV is that you can pass Composer commands through the DDEV CLI and into your containerized environment. This means that you can separate your machine’s specific configuration from your development environment. You no longer have to manage the various file path, dependency, and version issues that generally accompany local PHP development. Moreover, you can quickly context-switch between multiple projects using different frameworks and tech stacks with minimal effort.
 
-composer create-project drupal/recommended-project
-You now have a web server and database server configured and running.
+Use the ddev composer command to download drupal/recommended-project. This will download Drupal core, its libraries, and other related resources and then create a default project:
 
-Install Drupal
-Next, you must install Drupal using Drush, which populates your Drupal application’s new database.
+ddev composer create "drupal/recommended-project"
+Now download one final component called Drush, or Drupal Shell. This tutorial will only use one drush command, and this tutorial provides an alternative, but drush is a powerful CLI for Drupal development that can improve your efficiency.
 
-Using DDEV and Drush, execute the command below. Replace my-password with the password that you would like to use for the admin (user 1) account.
+Use ddev composer to install drush:
 
-ddev drush site:install --account-name=admin --account-pass=my-password
-Drupal is now installed.
+ddev composer require "drush/drush"
+You have now built a default Drupal 9 project and installed drush. Now you will view your project in a browser and configure your website’s settings.
 
-Log In
-Finally, launch your new Drupal site and log in.
+Step 3 — Configuring Your Drupal 9 Project
+Now that you have installed Drupal 9 you can visit your new project in your browser. To do this, you can rerun ddev start and copy one of the two URLs that it outputs, or you can use the following command, which will automatically launch your site in a new browser window:
 
 ddev launch
-You can also generate a one-time login link.
+You will encounter the standard Drupal installation wizard.
 
-ddev drush user:login
-If necessary, execute ddev describe to view the URL of your site. Copy and paste that URL into your web browser to visit it.
+Drupal 9 installer from browser
 
-Log in to the site using the --account-name and --account-pass you specified in the previous section (the section called “Install Drupal”).
+Here you have two options. You can use this UI and follow the wizard through installation, or you can return to your terminal and pass a drush command through ddev. The latter option will automate the installation process and set admin as both your username and password.
+
+Option 1 — Using the Wizard
+Return to the wizard in your browser. Under Choose language select a language from the drop-down menu and click Save and continue. Now select an installation profile. You can choose between Standard, Minimal, and Demo. Make your choice and then click Save and continue. Drupal will automatically verify your requirements, set up a database, and install your site. Your last step is to customize a few configurations. Add a site name and a site email address that ends in your domain. Then choose a username and password. Choose a strong password and keep your credentials somewhere safe. Lastly, add a private email address that you regularly check, fill in the regional settings, and press Save and continue.
+
+Drupal 9 welcome message with a warning about permissions
+
+Your new site will load with a welcome message.
